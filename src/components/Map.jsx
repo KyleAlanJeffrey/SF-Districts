@@ -2,8 +2,7 @@ import React from "react";
 import { useJsApiLoader, GoogleMap } from "@react-google-maps/api";
 import { useEffect, useState } from "react";
 import District from "./District";
-import { Flex, Box, Spinner } from "@chakra-ui/react";
-import matchers from "@testing-library/jest-dom/matchers";
+import { Box, Spinner } from "@chakra-ui/react";
 const SAN_FRANCISCO_COORDS = { lat: 37.7749, lng: -122.4194 };
 const NORTHWEST = { lng: -122.520341, lat: 37.808983 };
 const SOUTHEAST = { lng: -122.362412, lat: 37.708826 };
@@ -30,18 +29,12 @@ function getDistrictBounds(feature) {
 function Map() {
   const [map, setMap] = useState(null);
   const [center, setCenter] = useState(SAN_FRANCISCO_COORDS);
-  const [heading, setHeading] = useState(0);
-  const [tilt, setTilt] = useState(0);
-  const [zoom, setZoom] = useState(13);
   const [districtData, setDistrictData] = useState(null);
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
   });
-  useEffect(() => {
-    if (isLoaded) {
-      console.log("loaded google Maps API");
-    }
-  }, [isLoaded]);
+  // Not making this stateful
+  const camera = { tilt: 0, heading: 0, zoom: 13 };
   // On Mount
   useEffect(() => {
     fetch("./geodata_lat_lng.json")
@@ -55,30 +48,40 @@ function Map() {
         setDistrictData(geoData.features);
       });
   }, []);
+
   const onMapLoad = function (m) {
+    console.log("Map loaded");
     setMap(m);
   };
-  function handleDistrictClick(bounds, zoom, tilt) {
-    map.setZoom(15);
-    map.setTilt(60);
-    map.panTo(bounds);
-
-    setInterval(() => {
-      setHeading(heading + 5);
-    }, 100);
+  function handleDistrictClick(center) {
+    const animation = setInterval((iterations) => {
+      map.moveCamera({
+        center: center,
+        tilt: camera.tilt,
+        heading: camera.heading,
+        zoom: camera.zoom,
+      });
+      if (camera.zoom < 17) {
+        camera.zoom += 0.05;
+      }
+      if (camera.tilt < 45) {
+        camera.tilt += 0.5;
+      }
+      if (camera.heading <= 360) {
+        camera.heading += 0.2;
+      }
+    });
   }
-  useEffect(() => {
-    if (!map) {
-      return;
-    }
-    map.setHeading(180);
-  }, [heading]);
   function renderMap() {
     return (
       <Box pos="absolute" w="90%" h="90%">
         <GoogleMap
           clickableIcons={false}
           options={{
+            tilt: camera.tilt,
+            zoom: camera.zoom,
+            heading: camera.heading,
+            mapId: "a46093dfacdea88c",
             restriction: {
               latLngBounds: {
                 north: NORTHWEST["lat"],
@@ -88,9 +91,7 @@ function Map() {
               },
             },
           }}
-          tilt={tilt}
           center={center}
-          zoom={zoom}
           onLoad={onMapLoad}
           mapContainerStyle={{ width: "100%", height: "100%" }}
         >

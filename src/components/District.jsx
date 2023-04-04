@@ -12,27 +12,28 @@ function District(props) {
         paths={feature.geometry.coordinates}
         options={options}
         onMouseOver={(e) => {
-          console.log(feature);
+          console.log(feature.properties.name);
           setOptions((prev) => ({
             ...prev,
             fillOpacity: 0.2,
-            geodesic: true,
           }));
         }}
         onMouseOut={(e) => {
           setOptions((prev) => ({
             ...prev,
             fillOpacity: 1,
-            geodesic: false,
           }));
         }}
         onClick={(e) => {
-          console.log(feature.bounds);
           let center = {
             lng: (feature.bounds.south + feature.bounds.north) / 2,
             lat: (feature.bounds.east + feature.bounds.west) / 2,
           };
-          props.onDistrictClick(center, 15, 45);
+          setOptions((prev) => ({
+            ...prev,
+            fillOpacity: 0,
+          }));
+          props.onDistrictClick(center);
         }}
       />
     </div>
