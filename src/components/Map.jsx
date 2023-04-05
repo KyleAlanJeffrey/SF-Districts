@@ -2,16 +2,17 @@ import React from "react";
 import { useJsApiLoader, GoogleMap } from "@react-google-maps/api";
 import { useEffect, useState } from "react";
 import District from "./District";
-import { Box, Spinner } from "@chakra-ui/react";
+import DistrictPopup from "./DistrictPopup";
+import { Box, Spinner, Button } from "@chakra-ui/react";
 const SAN_FRANCISCO_COORDS = { lat: 37.7749, lng: -122.4194 };
 const NORTHWEST = { lng: -122.520341, lat: 37.808983 };
 const SOUTHEAST = { lng: -122.362412, lat: 37.708826 };
 const options = {
-  fillColor: "grey",
+  fillColor: "lightblue",
   fillOpacity: 1,
   strokeColor: "white",
   strokeOpacity: 1,
-  strokeWeight: 2,
+  strokeWeight: 4,
   clickable: true,
   draggable: false,
   editable: false,
@@ -28,8 +29,10 @@ function getDistrictBounds(feature) {
 }
 function Map() {
   const [map, setMap] = useState(null);
-  const [center, setCenter] = useState(SAN_FRANCISCO_COORDS);
   const [districtData, setDistrictData] = useState(null);
+  const [focusAnimation, setFocusAnimation] = useState(null);
+  const [focusedDistrict, setFocusedDistrict] = useState(null);
+  const [hoveredOverDisrict, setHoveredOverDistrict] = useState(null);
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
   });
@@ -44,19 +47,22 @@ function Map() {
         // Get the center of each district and add to each feature
         geoData.features.forEach((feature) => {
           feature.bounds = getDistrictBounds(feature);
+          feature.center = {
+            lng: (feature.bounds.south + feature.bounds.north) / 2,
+            lat: (feature.bounds.east + feature.bounds.west) / 2,
+          };
         });
         setDistrictData(geoData.features);
       });
   }, []);
-
-  const onMapLoad = function (m) {
-    console.log("Map loaded");
-    setMap(m);
-  };
-  function handleDistrictClick(center) {
-    const animation = setInterval((iterations) => {
+  useEffect(() => {
+    if (!focusedDistrict) {
+      return;
+    }
+    clearInterval(focusAnimation);
+    const animation = setInterval(() => {
       map.moveCamera({
-        center: center,
+        center: focusedDistrict.center,
         tilt: camera.tilt,
         heading: camera.heading,
         zoom: camera.zoom,
@@ -67,17 +73,43 @@ function Map() {
       if (camera.tilt < 45) {
         camera.tilt += 0.5;
       }
-      if (camera.heading <= 360) {
-        camera.heading += 0.2;
-      }
-    });
+      camera.heading = (camera.heading + 0.5) % 360;
+    }, 50);
+    setFocusAnimation(animation);
+  }, [focusedDistrict]);
+
+  const onMapLoad = function (m) {
+    console.log("Map loaded");
+    setMap(m);
+  };
+
+  function handleDistrictClick(district) {
+    setFocusedDistrict(district);
   }
+  function handleDistrictHover(district) {
+    setHoveredOverDistrict(district);
+  }
+
   function renderMap() {
     return (
-      <Box pos="absolute" w="90%" h="90%">
+      <Box pos="absolute" w="90%" h="90%" overflow={"hidden"}>
+        <DistrictPopup district={hoveredOverDisrict} />
+        <Button
+          colorScheme="teal"
+          size="lg"
+          hidden={focusedDistrict == null}
+          onClick={(e) => {
+            clearInterval(focusAnimation);
+            setFocusedDistrict(null);
+          }}
+        >
+          Back To Map
+        </Button>
         <GoogleMap
           clickableIcons={false}
           options={{
+            disableDoubleClickZoom: true,
+            disableDefaultUI: true,
             tilt: camera.tilt,
             zoom: camera.zoom,
             heading: camera.heading,
@@ -91,7 +123,7 @@ function Map() {
               },
             },
           }}
-          center={center}
+          center={SAN_FRANCISCO_COORDS}
           onLoad={onMapLoad}
           mapContainerStyle={{ width: "100%", height: "100%" }}
         >
@@ -99,8 +131,10 @@ function Map() {
             <District
               key={`district_${index}`}
               onDistrictClick={handleDistrictClick}
+              onDistrictHover={handleDistrictHover}
               feature_data={feature}
               options={options}
+              freezeOpacity={focusedDistrict != null}
             />
           ))}
         </GoogleMap>

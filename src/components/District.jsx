@@ -1,9 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { PolygonF } from "@react-google-maps/api";
 
 function District(props) {
   const [feature, setFeature] = useState(props.feature_data);
   const [options, setOptions] = useState(props.options);
+
+  function opacitySet(prev, opacity) {
+    return {
+      ...prev,
+      fillOpacity: opacity,
+    };
+  }
   return (
     <div style={{ colo: "1s ease-out" }}>
       <PolygonF
@@ -12,28 +19,19 @@ function District(props) {
         paths={feature.geometry.coordinates}
         options={options}
         onMouseOver={(e) => {
-          console.log(feature.properties.name);
-          setOptions((prev) => ({
-            ...prev,
-            fillOpacity: 0.2,
-          }));
+          if (props.freezeOpacity) return;
+          props.onDistrictHover(feature);
+          setOptions((prev) => opacitySet(prev, 0.2));
         }}
         onMouseOut={(e) => {
-          setOptions((prev) => ({
-            ...prev,
-            fillOpacity: 1,
-          }));
+          if (props.freezeOpacity) return;
+          props.onDistrictHover(null);
+
+          setOptions((prev) => opacitySet(prev, 1));
         }}
         onClick={(e) => {
-          let center = {
-            lng: (feature.bounds.south + feature.bounds.north) / 2,
-            lat: (feature.bounds.east + feature.bounds.west) / 2,
-          };
-          setOptions((prev) => ({
-            ...prev,
-            fillOpacity: 0,
-          }));
-          props.onDistrictClick(center);
+          setOptions((prev) => opacitySet(prev, 0));
+          props.onDistrictClick(feature);
         }}
       />
     </div>
