@@ -12,7 +12,7 @@ function District(props) {
     };
   }
   return (
-    <div style={{ colo: "1s ease-out" }}>
+    <div>
       <PolygonF
         feature={feature}
         key={`p_${props.index}`}

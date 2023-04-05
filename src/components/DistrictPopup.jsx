@@ -3,6 +3,8 @@ import {
   Card,
   CardBody,
   Flex,
+  Center,
+  Box,
   Text,
   useColorModeValue,
 } from "@chakra-ui/react";
@@ -21,24 +23,18 @@ function DistrictPopup(props) {
   }, [props.district]);
 
   return (
-    <Flex justifyContent={"center"}>
-      <Card
-        transition={"all .3s ease-in-out"}
-        pos={"absolute"}
-        bottom={top}
-        zIndex={"3"}
-        paddingX={"25"}
-        bg="white"
-        border="solid lightgray 2px"
-        borderRadius={"10px"}
-      >
-        <CardBody>
-          <Text fontSize="35" fontFamily={"sans-serif"}>
-            {districtName} District
-          </Text>
-        </CardBody>
-      </Card>
-    </Flex>
+    <Box
+      transition={"all .3s ease-in-out"}
+      bg={useColorModeValue("gray.100", "gray.900")}
+      position={"absolute"}
+      border="solid lightgray 2px"
+      borderRadius="8"
+      bottom={top}
+    >
+      <Text fontSize={35} m={8} fontFamily={"sans-serif"}>
+        {districtName} District
+      </Text>
+    </Box>
   );
 }
 

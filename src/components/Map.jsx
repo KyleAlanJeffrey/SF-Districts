@@ -2,17 +2,19 @@ import React from "react";
 import { useJsApiLoader, GoogleMap } from "@react-google-maps/api";
 import { useEffect, useState } from "react";
 import District from "./District";
-import DistrictPopup from "./DistrictPopup";
-import { Box, Spinner, Button } from "@chakra-ui/react";
+import { Box, Spinner, useColorMode } from "@chakra-ui/react";
+import HoverInfoOverlay from "./HoverInfoOverlay";
+
+const ANIMATION_FPS = 35;
 const SAN_FRANCISCO_COORDS = { lat: 37.7749, lng: -122.4194 };
 const NORTHWEST = { lng: -122.520341, lat: 37.808983 };
 const SOUTHEAST = { lng: -122.362412, lat: 37.708826 };
 const options = {
-  fillColor: "lightblue",
-  fillOpacity: 1,
+  fillColor: "grey",
+  fillOpacity: 0.8,
   strokeColor: "white",
-  strokeOpacity: 1,
-  strokeWeight: 4,
+  strokeOpacity: 0.8,
+  strokeWeight: 2,
   clickable: true,
   draggable: false,
   editable: false,
@@ -32,7 +34,7 @@ function Map() {
   const [districtData, setDistrictData] = useState(null);
   const [focusAnimation, setFocusAnimation] = useState(null);
   const [focusedDistrict, setFocusedDistrict] = useState(null);
-  const [hoveredOverDisrict, setHoveredOverDistrict] = useState(null);
+  const [hoveredOverDistrict, setHoveredOverDistrict] = useState(null);
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
   });
@@ -74,7 +76,7 @@ function Map() {
         camera.tilt += 0.5;
       }
       camera.heading = (camera.heading + 0.5) % 360;
-    }, 50);
+    }, 1000 / ANIMATION_FPS);
     setFocusAnimation(animation);
   }, [focusedDistrict]);
 
@@ -92,11 +94,11 @@ function Map() {
 
   function renderMap() {
     return (
-      <Box pos="absolute" w="90%" h="90%" overflow={"hidden"}>
-        <DistrictPopup district={hoveredOverDisrict} />
-        <Button colorScheme="teal" size="lg" postion="relative" top="100%" left="2%">
-          Back To Map
-        </Button>
+      <Box pos="absolute" w="100%" h="100%">
+        <HoverInfoOverlay
+          foucsedDistrict={focusedDistrict}
+          hoveredOverDistrict={hoveredOverDistrict}
+        />
         <GoogleMap
           clickableIcons={false}
           options={{
