@@ -94,15 +94,7 @@ function Map() {
     return (
       <Box pos="absolute" w="90%" h="90%" overflow={"hidden"}>
         <DistrictPopup district={hoveredOverDisrict} />
-        <Button
-          colorScheme="teal"
-          size="lg"
-          hidden={focusedDistrict == null}
-          onClick={(e) => {
-            clearInterval(focusAnimation);
-            setFocusedDistrict(null);
-          }}
-        >
+        <Button colorScheme="teal" size="lg" postion="relative" top="100%" left="2%">
           Back To Map
         </Button>
         <GoogleMap
