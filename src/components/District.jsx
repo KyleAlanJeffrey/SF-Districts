@@ -8,7 +8,7 @@ function District(props) {
   function opacitySet(prev, opacity) {
     return {
       ...prev,
-      fillOpacity: opacity,
+      strokeWeight: opacity,
     };
   }
   return (
